@@ -4,6 +4,7 @@ import seaborn as sn
 import numpy as np
 import pandas as pd
 import math
+import cv2
 import datetime
 import platform
 import os
@@ -25,60 +26,46 @@ def get_number_from_txt(txt_file_path):
             return None
 
 
-def resize_image(input_path, output_path, target_size=(28, 28)):
-    img = Image.open(input_path)
-    img_resized = img.resize(target_size)
-    img_resized.save(output_path)
+def convertTestToCSV (imgDir):
+    for img in os.listdir(imgDir):
+        _, file_extension = os.path.splitext(img)
+        if not file_extension.lower() == '.png':
+            print("Skipping non-PNG file: {img}")
+            continue
+        img_array = cv2.imread(os.path.join(imgDir, img), cv2.IMREAD_GRAYSCALE)
+        img_array = cv2.resize(img_array, (28, 28))
+        img_array = img_array.flatten()
+        img_array = img_array.reshape(-1, 1).T
+        with open('content/csv/test.csv', 'ab') as f:
+            np.savetxt(f, img_array, delimiter=",")
 
 
-def image_to_csv_train(image_folder, csv_output_file):
-    image_files = [f for f in os.listdir(image_folder) if f.endswith(('.jpg', '.png', '.jpeg'))]
-    df = pd.DataFrame(columns=['label'] + [f'pixel_{i}' for i in range(28 * 28)])
+def convertTrainToCSV (imgDir):
+    for img in os.listdir(imgDir):
+        _, file_extension = os.path.splitext(img)
+        if not file_extension.lower() == '.png':
+            print("Skipping non-PNG file: {img}")
+            continue
+        base_name = os.path.splitext(os.path.basename(img))[0]
+        number = get_number_from_txt(imgDir + '/' + base_name + '.txt')
 
-    for image_file in image_files:
-        image_path = os.path.join(image_folder, image_file)
-
-        base_name = os.path.splitext(os.path.basename(image_file))[0]
-        txt_file_path = os.path.join(directory, f"{base_name}.txt")
-        number = get_number_from_txt(txt_file_path)
-
-        resized_image_path = os.path.join(image_folder, 'resized', image_file)
-        resize_image(image_path, resized_image_path)
-        resized_img = Image.open(resized_image_path)
-        resized_img = resized_img.convert('L')
-        pixel_values = list(resized_img.getdata())
-        row_data = [number] + pixel_values
-        df = df.append(pd.Series(row_data, index=df.columns), ignore_index=True)
-
-    df.to_csv(csv_output_file, index=False)
+        img_array = cv2.imread(os.path.join(imgDir, img), cv2.IMREAD_GRAYSCALE)
+        img_array = cv2.resize(img_array, (28, 28))
+        img_array = img_array.flatten()
+        img_array = img_array.reshape(-1, 1).T
+        img_array = np.insert(img_array, 0, number)
+        with open('content/csv/train.csv', 'ab') as f:
+            np.savetxt(f, img_array, delimiter=",")
 
 
-def image_to_csv_test(image_folder, csv_output_file):
-    image_files = [f for f in os.listdir(image_folder) if f.endswith(('.jpg', '.png', '.jpeg'))]
-    df = pd.DataFrame(columns=[f'pixel_{i}' for i in range(28 * 28)])
+trainDir = 'content/images/train'
+testDir = 'content/images/test'
 
-    for image_file in image_files:
-        image_path = os.path.join(image_folder, image_file)
-        resized_image_path = os.path.join(image_folder, 'resized', image_file)
-        resize_image(image_path, resized_image_path)
-        resized_img = Image.open(resized_image_path)
-        resized_img = resized_img.convert('L')
-        pixel_values = list(resized_img.getdata())
-        df = df.append(pd.Series(pixel_values, index=df.columns), ignore_index=True)
+convertTestToCSV(testDir)
+convertTrainToCSV(trainDir)
 
-    df.to_csv(csv_output_file, index=False)
-
-
-image_folder_path_test = '/content/images/test/'
-image_folder_path_train = '/content/images/train/'
-csv_output_file_test = '/content/csv/test.csv'
-csv_output_file_train = '/content/csv/train.csv'
-
-image_to_csv_test(image_folder_path_test, csv_output_file_test)
-image_to_csv_train(image_folder_path_train, csv_output_file_train)
-
-train = pd.read_csv('/content/csv/train.csv')
-test = pd.read_csv('/content/csv/test.csv')
+train = pd.read_csv('content/csv/train.csv')
+test = pd.read_csv('content/csv/test.csv')
 
 X = train.iloc[:, 1:785]
 y = train.iloc[:, 0]
