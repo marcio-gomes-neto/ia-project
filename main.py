@@ -13,56 +13,56 @@ from sklearn.model_selection import train_test_split
 from PIL import Image
 
 
-def get_number_from_txt(txt_file_path):
-    # Open the TXT file and read the first two characters
-    with open(txt_file_path, 'r') as file:
-        content = file.read(2)
-        # Convert the first two characters to a number
-        try:
-            number = int(content)
-            # Ensure the number is in the range of 1 to 99
-            return max(1, min(99, number))
-        except ValueError:
-            return None
-
-
-def convertTestToCSV (imgDir):
-    for img in os.listdir(imgDir):
-        _, file_extension = os.path.splitext(img)
-        if not file_extension.lower() == '.png':
-            print("Skipping non-PNG file: {img}")
-            continue
-        img_array = cv2.imread(os.path.join(imgDir, img), cv2.IMREAD_GRAYSCALE)
-        img_array = cv2.resize(img_array, (28, 28))
-        img_array = img_array.flatten()
-        img_array = img_array.reshape(-1, 1).T
-        with open('content/csv/test.csv', 'ab') as f:
-            np.savetxt(f, img_array, delimiter=",")
-
-
-def convertTrainToCSV (imgDir):
-    for img in os.listdir(imgDir):
-        _, file_extension = os.path.splitext(img)
-        if not file_extension.lower() == '.png':
-            print("Skipping non-PNG file: {img}")
-            continue
-        base_name = os.path.splitext(os.path.basename(img))[0]
-        number = get_number_from_txt(imgDir + '/' + base_name + '.txt')
-
-        img_array = cv2.imread(os.path.join(imgDir, img), cv2.IMREAD_GRAYSCALE)
-        img_array = cv2.resize(img_array, (28, 28))
-        img_array = img_array.flatten()
-        img_array = img_array.reshape(-1, 1).T
-        img_array = np.insert(img_array, 0, number)
-        with open('content/csv/train.csv', 'ab') as f:
-            np.savetxt(f, img_array, delimiter=",")
-
-
-trainDir = 'content/images/train'
-testDir = 'content/images/test'
-
-convertTestToCSV(testDir)
-convertTrainToCSV(trainDir)
+# def get_number_from_txt(txt_file_path):
+#     # Open the TXT file and read the first two characters
+#     with open(txt_file_path, 'r') as file:
+#         content = file.read(2)
+#         # Convert the first two characters to a number
+#         try:
+#             number = int(content)
+#             # Ensure the number is in the range of 1 to 99
+#             return max(1, min(99, number))
+#         except ValueError:
+#             return None
+#
+#
+# def convertTestToCSV (imgDir):
+#     for img in os.listdir(imgDir):
+#         _, file_extension = os.path.splitext(img)
+#         if not file_extension.lower() == '.png':
+#             print("Skipping non-PNG file: {img}")
+#             continue
+#         img_array = cv2.imread(os.path.join(imgDir, img), cv2.IMREAD_GRAYSCALE)
+#         img_array = cv2.resize(img_array, (28, 28))
+#         img_array = img_array.flatten()
+#         img_array = img_array.reshape(-1, 1).T
+#         with open('content/csv/test.csv', 'ab') as f:
+#             np.savetxt(f, img_array, delimiter=",")
+#
+#
+# def convertTrainToCSV (imgDir):
+#     for img in os.listdir(imgDir):
+#         _, file_extension = os.path.splitext(img)
+#         if not file_extension.lower() == '.png':
+#             print("Skipping non-PNG file: {img}")
+#             continue
+#         base_name = os.path.splitext(os.path.basename(img))[0]
+#         number = get_number_from_txt(imgDir + '/' + base_name + '.txt')
+#
+#         img_array = cv2.imread(os.path.join(imgDir, img), cv2.IMREAD_GRAYSCALE)
+#         img_array = cv2.resize(img_array, (28, 28))
+#         img_array = img_array.flatten()
+#         img_array = img_array.reshape(-1, 1).T
+#         img_array = np.insert(img_array, 0, number)
+#         with open('content/csv/train.csv', 'ab') as f:
+#             np.savetxt(f, img_array, delimiter=",")
+#
+#
+# trainDir = 'content/images/train'
+# testDir = 'content/images/test'
+#
+# convertTestToCSV(testDir)
+# convertTrainToCSV(trainDir)
 
 train = pd.read_csv('content/csv/train.csv')
 test = pd.read_csv('content/csv/test.csv')
